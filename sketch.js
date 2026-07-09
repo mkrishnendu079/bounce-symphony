@@ -4,20 +4,60 @@
 
 // ---------- Config ----------
 const CIRCLE_RADIUS = 260;
-const NUM_BALLS = 3;
-const GRAVITY = 0.15;
-const RESTITUTION = 0.92;
-const ARC_SEGMENTS = 360;
+const NUM_BALLS = 5;
+ const GRAVITY = 0.18;      // lower = balls stay airborne longer, less pooling at bottom
+ const RESTITUTION = 0.97;  // higher = bouncier walls (1.0 = perfect bounce, 0.0 = no bounce)
+ const INITIAL_SPEED_MIN = 11;  // min random launch speed
+ const INITIAL_SPEED_MAX = 11;  // max random launch speed
+ const ARC_SEGMENTS = 360;
 const EROSION_PER_HIT = 2;
 const SCALE = [
   261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88,
   523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77
 ];
-const BALL_COLORS = [
-  [255,  99, 132],
-  [ 99, 255, 162],
-  [ 99, 172, 255],
-];
+ const BALL_COLORS = [
+   [255,  99, 132],
+   [ 99, 255, 162],
+   [ 99, 172, 255],
+   [255, 206,  86],
+   [180,  99, 255],
+   [255, 140,  60],
+   [ 80, 255, 240],
+   [255,  80, 200],
+   [160, 255,  80],
+   [255, 255, 100],
+   [100, 200, 100],
+   [200, 100, 100],
+   [140, 200, 255],
+   [255, 180, 200],
+   [220, 220, 120],
+   [120, 255, 120],
+   [255, 120, 120],
+   [120, 120, 255],
+   [200, 255, 200],
+   [255, 200, 150],
+ ];
+
+ function getBallColor(index) {
+   if (index < BALL_COLORS.length) return BALL_COLORS[index];
+   const hue = (index * 137.508) % 360;
+   return hsbToRgb(hue, 70, 100);
+ }
+
+ function hsbToRgb(h, s, b) {
+   s /= 100; b /= 100;
+   const c = b * s;
+   const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+   const m = b - c;
+   let r, g, bl;
+   if (h < 60)       { r = c; g = x; bl = 0; }
+   else if (h < 120) { r = x; g = c; bl = 0; }
+   else if (h < 180) { r = 0; g = c; bl = x; }
+   else if (h < 240) { r = 0; g = x; bl = c; }
+   else if (h < 300) { r = x; g = 0; bl = c; }
+   else              { r = c; g = 0; bl = x; }
+   return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((bl + m) * 255)];
+ }
 
 // ---------- Globals ----------
 let cx, cy;
@@ -182,7 +222,7 @@ class Ball {
     this.pos = { x: x, y: y };
     this.vel = { x: vx, y: vy };
     this.radius = radius;
-    this.color = BALL_COLORS[colorIndex % BALL_COLORS.length];
+     this.color = getBallColor(colorIndex);
     this.alive = true;
     this.trail = [];
     this.colorIndex = colorIndex;
@@ -289,7 +329,7 @@ function resetScene() {
     const angle = (i / NUM_BALLS) * Math.PI * 2 + Math.PI / 4;
     const x = cx + Math.cos(angle) * CIRCLE_RADIUS * 0.4;
     const y = cy + Math.sin(angle) * CIRCLE_RADIUS * 0.4;
-    const speed = random(5, 7);
+     const speed = random(INITIAL_SPEED_MIN, INITIAL_SPEED_MAX);
     const dir = random(Math.PI * 2);
     balls.push(new Ball(x, y, Math.cos(dir) * speed, Math.sin(dir) * speed, 14, i));
   }
