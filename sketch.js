@@ -5,10 +5,10 @@
 // ---------- Config ----------
 const CIRCLE_RADIUS = 260;
 const NUM_BALLS = 5;
- const GRAVITY = 0.18;      // lower = balls stay airborne longer, less pooling at bottom
+ const GRAVITY = 0.48;      // lower = balls stay airborne longer, less pooling at bottom
  const RESTITUTION = 0.97;  // higher = bouncier walls (1.0 = perfect bounce, 0.0 = no bounce)
- const INITIAL_SPEED_MIN = 11;  // min random launch speed
- const INITIAL_SPEED_MAX = 11;  // max random launch speed
+ const INITIAL_SPEED_MIN = 31;  // min random launch speed
+ const INITIAL_SPEED_MAX = 31;  // max random launch speed
  const ARC_SEGMENTS = 360;
 const EROSION_PER_HIT = 2;
 const SCALE = [
