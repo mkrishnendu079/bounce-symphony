@@ -4,11 +4,11 @@
 
 // ---------- Config ----------
 const CIRCLE_RADIUS = 260;
-const NUM_BALLS = 5;
- const GRAVITY = 0.48;      // lower = balls stay airborne longer, less pooling at bottom
+const NUM_BALLS = 7;
+ const INITIAL_SPEED_MIN = 15;  // min random launch speed
+ const INITIAL_SPEED_MAX = 15;  // max random launch speed
+ const GRAVITY = 0.3;  // scales with speed so gravity doesn't overpower low speeds
  const RESTITUTION = 0.97;  // higher = bouncier walls (1.0 = perfect bounce, 0.0 = no bounce)
- const INITIAL_SPEED_MIN = 31;  // min random launch speed
- const INITIAL_SPEED_MAX = 31;  // max random launch speed
  const ARC_SEGMENTS = 360;
 const EROSION_PER_HIT = 2;
 const SCALE = [
@@ -157,23 +157,43 @@ class ArcBoundary {
 
     if (dist + ball.radius < this.r) return null;
 
+    // Ball centre can be up to one radius past the wall and still be
+    // physically overlapping it.  Beyond that the ball has fully escaped.
+    // (This also prevents tunneling: a fast ball can jump from dist < r to
+    // dist > r in a single frame — we still need to catch that here.)
+    if (dist > this.r + ball.radius) return null;
+
     let angle = Math.atan2(dy, dx);
     if (angle < 0) angle += Math.PI * 2;
 
-    const segIndex = Math.floor((angle / (Math.PI * 2)) * this.segments) % this.segments;
+    const centerSeg = Math.floor((angle / (Math.PI * 2)) * this.segments) % this.segments;
 
-    const ballDiameterArc = (ball.radius * 2 * 2.0) / this.r;
-    const escapeGapSegments = Math.ceil(ballDiameterArc / this.segAngle);
+    // Angular half-width the ball subtends at the boundary radius.
+    // Use the ball's actual radius (not a doubled value) so the gap
+    // threshold matches the physical ball size.
+    const halfAngleExt = Math.asin(Math.min(1, ball.radius / this.r));
+    const halfSegExt = Math.ceil(halfAngleExt / this.segAngle);
 
-    const gap = this.gapSizeAt(segIndex);
-    if (gap >= escapeGapSegments) {
+    // Scan every segment the ball physically overlaps.
+    // If any of those segments is alive, the ball is hitting real wall.
+    let hitSeg = -1;
+    for (let i = -halfSegExt; i <= halfSegExt; i++) {
+      const idx = (centerSeg + i + this.segments) % this.segments;
+      if (this.alive[idx]) {
+        hitSeg = idx;
+        break;
+      }
+    }
+
+    if (hitSeg === -1) {
+      // The entire angular span is a gap — ball escapes through.
       return null;
     }
 
     const nx = dx / dist;
     const ny = dy / dist;
     const penetrated = dist + ball.radius - this.r;
-     return { angle, segIndex, nx, ny, penetration: penetrated };
+    return { angle, segIndex: hitSeg, nx, ny, penetration: penetrated };
   }
 
   erode(segIndex) {
@@ -236,8 +256,8 @@ class Ball {
       return;
     }
 
-    // Cap speed
-    const maxSpeed = 12;
+    // Cap speed — scales with INITIAL_SPEED_MAX so the cap tracks your speed setting
+     const maxSpeed = INITIAL_SPEED_MAX * 1.2;
     const sp = Math.sqrt(this.vel.x * this.vel.x + this.vel.y * this.vel.y);
     if (sp > maxSpeed) {
       this.vel.x = (this.vel.x / sp) * maxSpeed;
