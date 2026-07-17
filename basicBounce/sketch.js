@@ -7,7 +7,7 @@ const CIRCLE_RADIUS = 260;
 const NUM_BALLS = 7;
  const INITIAL_SPEED_MIN = 15;  // min random launch speed
  const INITIAL_SPEED_MAX = 15;  // max random launch speed
- const GRAVITY = 0.3;  // scales with speed so gravity doesn't overpower low speeds
+ const GRAVITY = 0.5;  // scales with speed so gravity doesn't overpower low speeds
  const RESTITUTION = 0.97;  // higher = bouncier walls (1.0 = perfect bounce, 0.0 = no bounce)
  const ARC_SEGMENTS = 360;
 const EROSION_PER_HIT = 2;
