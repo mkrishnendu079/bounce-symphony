@@ -72,6 +72,7 @@ let cx, cy;
 let balls = [];
 let boundaries = [];
 let audioReady = false;
+let frozen = false;  // when true, scene is paused after reset until 'J' is pressed
 
 // ============================
 //  AudioEngine
@@ -479,18 +480,20 @@ function draw() {
   for (const b of boundaries) b.display();
 
   for (const ball of balls) {
-    ball.update(boundaries);
+    if (!frozen) ball.update(boundaries);
     ball.display();
   }
 
-  balls = balls.filter(b => b.alive || b.pos.y < height + 100);
+  if (!frozen) {
+    balls = balls.filter(b => b.alive || b.pos.y < height + 100);
 
-  // Ball-to-ball collision
-  for (let i = 0; i < balls.length; i++) {
-    if (!balls[i].alive) continue;
-    for (let j = i + 1; j < balls.length; j++) {
-      if (!balls[j].alive) continue;
-      ballCollide(balls[i], balls[j]);
+    // Ball-to-ball collision
+    for (let i = 0; i < balls.length; i++) {
+      if (!balls[i].alive) continue;
+      for (let j = i + 1; j < balls.length; j++) {
+        if (!balls[j].alive) continue;
+        ballCollide(balls[i], balls[j]);
+      }
     }
   }
 
@@ -512,7 +515,7 @@ function draw() {
 
   // All escaped message
   const aliveCount = balls.filter(b => b.alive).length;
-  if (aliveCount === 0 && audioReady) {
+  if (aliveCount === 0 && audioReady && !frozen) {
     push();
     fill(150, 150, 170, 200);
     textAlign(CENTER, CENTER);
@@ -585,7 +588,8 @@ function mousePressed() { ensureAudio(); }
 function touchStarted() { ensureAudio(); return false; }
 function keyPressed() {
   ensureAudio();
-  if (key === 'r' || key === 'R') resetScene();
+  if (key === 'r' || key === 'R') { resetScene(); frozen = true; }
+  if (key === 'j' || key === 'J') { frozen = false; }
 }
 
 function windowResized() {
